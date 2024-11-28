@@ -12,13 +12,13 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -60,7 +60,7 @@ public class SecurityConfig {
         // NOTE: Allow frames from same origin (This is necessary because the H2
         //  console runs inside an HTML frame, and Spring Security blocks frames  by
         //  default to prevent clickjacking attacks)
-        http.headers(headers -> headers.frameOptions(frameOptionsConfig -> frameOptionsConfig.sameOrigin()));
+        http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
         http.addFilterBefore(authenticateJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         http.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler));
         return http.build();
@@ -81,24 +81,6 @@ public class SecurityConfig {
     }
     */
 
-    // NOTE: Allow db users to access -> JDBCUserDetailManager
-//    @Bean
-//    public UserDetailsService userDetailsService(){
-//        JdbcUserDetailsManager userDetailsManager = new JdbcUserDetailsManager(dataSource);
-//        UserDetails user1 =
-//                User.withUsername("user1").password(passwordEncoder().encode("12345")).roles("USER").build();
-//
-//        UserDetails admin =
-//                User.withUsername("admin").password(passwordEncoder().encode("adminPass")).roles("ADMIN").build();
-//        userDetailsManager.createUser(user1);
-//        userDetailsManager.createUser(admin);
-//        return  userDetailsManager;
-//    }
-
-    @Bean
-    public UserDetailsService userDetailsService(DataSource dataSource) {
-        return  new JdbcUserDetailsManager(dataSource);
-    }
 
     @Bean
 //    NOTE: CommandLineRunner is an interface used to execute code after the Spring application context is initialized.
@@ -113,6 +95,12 @@ public class SecurityConfig {
             userDetailsManager.createUser(user1);
             userDetailsManager.createUser(admin);
         };
+    }
+
+    // NOTE: Allow db users to access -> JDBCUserDetailManager
+    @Bean
+    public UserDetailsService userDetailsService(DataSource dataSource) {
+        return  new JdbcUserDetailsManager(dataSource);
     }
 
     @Bean
